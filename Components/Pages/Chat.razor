@@ -1,0 +1,227 @@
+@page "/chat"
+@rendermode InteractiveServer
+@using Microsoft.Extensions.AI
+@inject ChatOrchestrator Orchestrator
+
+<PageTitle>Hybrid Ping-Pong</PageTitle>
+
+<div class="hpp-shell">
+    <header class="hpp-header">
+        <div class="hpp-title">
+            <span class="hpp-logo">🏓</span>
+            <div>
+                <h1>Hybrid Ping-Pong</h1>
+                <p class="hpp-sub">Foundry Local ↔ Azure AI Foundry — smart routing demo</p>
+            </div>
+        </div>
+
+        <div class="hpp-controls">
+            <label class="hpp-strategy">
+                Routing:
+                <select @bind="_strategy" disabled="@_streaming">
+                    <option value="@RouterStrategy.RuleBased">Rule-based</option>
+                    <option value="@RouterStrategy.RuleBasedPlusSlm">Rule-based + SLM</option>
+                </select>
+            </label>
+            <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">Reset</button>
+        </div>
+
+        <div class="hpp-stats">
+            <div class="stat"><span class="lbl">Turns</span><span class="val">@_totalTurns</span></div>
+            <div class="stat local"><span class="lbl">🟢 Local</span><span class="val">@_localTurns (@LocalPct%)</span></div>
+            <div class="stat cloud"><span class="lbl">🔵 Cloud</span><span class="val">@_cloudTurns</span></div>
+            <div class="stat cost"><span class="lbl">💰 Cloud cost</span><span class="val">$@_totalCost.ToString("F4")</span></div>
+        </div>
+    </header>
+
+    <main class="hpp-conversation">
+        @if (_messages.Count == 0)
+        {
+            <div class="hpp-empty">
+                <h2>Try these on stage 👇</h2>
+                <ul>
+                    <li><code>Ciao, come stai?</code> — short chat → 🟢 local</li>
+                    <li><code>Il mio IBAN è IT60X0542811101000000123456</code> → 🟢 local (PII)</li>
+                    <li><code>Scrivimi un'analisi comparativa dettagliata tra REST e GraphQL con esempi di codice</code> → 🔵 cloud</li>
+                </ul>
+            </div>
+        }
+        @foreach (var m in _messages)
+        {
+            <div class="hpp-msg @(m.Role)">
+                @if (m.Role == "assistant" && m.Metrics is not null)
+                {
+                    <div class="hpp-badge @(m.Metrics.Target == RouteTarget.Local ? "local" : "cloud")"
+                         title="@m.Metrics.Reason (by @m.Metrics.DecidedBy)">
+                        @(m.Metrics.Target == RouteTarget.Local ? "🟢 LOCAL" : "🔵 CLOUD")
+                        · @m.Metrics.ModelName
+                        · @m.Metrics.LatencyMs ms
+                        · ttft @m.Metrics.FirstTokenMs ms
+                        @if (m.Metrics.Target == RouteTarget.Cloud)
+                        {
+                            <span> · $@m.Metrics.EstimatedCostUsd.ToString("F4")</span>
+                        }
+                        <span class="why">why? @m.Metrics.Reason</span>
+                    </div>
+                }
+                <div class="bubble">@m.Content</div>
+            </div>
+        }
+        @if (_streaming)
+        {
+            <div class="hpp-msg assistant streaming">
+                @if (_currentMetrics is not null)
+                {
+                    <div class="hpp-badge @(_currentMetrics.Target == RouteTarget.Local ? "local" : "cloud")">
+                        @(_currentMetrics.Target == RouteTarget.Local ? "🟢 LOCAL" : "🔵 CLOUD")
+                        · routing by @_currentMetrics.DecidedBy
+                        <span class="why">why? @_currentMetrics.Reason</span>
+                    </div>
+                }
+                <div class="bubble">@_streamingBuffer<span class="caret">▍</span></div>
+            </div>
+        }
+        @if (!string.IsNullOrEmpty(_error))
+        {
+            <div class="hpp-error">⚠️ @_error</div>
+        }
+    </main>
+
+    <footer class="hpp-composer">
+        <textarea @bind="_input" @bind:event="oninput"
+                  @onkeydown="OnKeyDown"
+                  placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
+                  disabled="@_streaming"></textarea>
+        <button @onclick="Send" disabled="@(_streaming || string.IsNullOrWhiteSpace(_input))">
+            @(_streaming ? "..." : "Send")
+        </button>
+    </footer>
+</div>
+
+<style>
+    .hpp-shell { display:flex; flex-direction:column; height:100vh; background:#0f1115; color:#e7e9ee; font-family:'Segoe UI', sans-serif; }
+    .hpp-header { padding:14px 22px; background:#161a22; border-bottom:1px solid #262b36; display:flex; align-items:center; gap:24px; flex-wrap:wrap; }
+    .hpp-title { display:flex; align-items:center; gap:14px; flex:1; min-width:280px; }
+    .hpp-logo { font-size:32px; }
+    .hpp-title h1 { margin:0; font-size:20px; }
+    .hpp-sub { margin:2px 0 0; font-size:12px; color:#8a93a6; }
+    .hpp-controls { display:flex; gap:10px; align-items:center; }
+    .hpp-strategy select { background:#0f1115; color:#e7e9ee; border:1px solid #2c3240; border-radius:6px; padding:6px 8px; }
+    .hpp-clear { background:#2c3240; color:#e7e9ee; border:0; padding:6px 12px; border-radius:6px; cursor:pointer; }
+    .hpp-stats { display:flex; gap:14px; flex-wrap:wrap; }
+    .stat { background:#0f1115; border:1px solid #262b36; padding:6px 12px; border-radius:8px; display:flex; flex-direction:column; min-width:90px; }
+    .stat .lbl { font-size:10px; color:#8a93a6; text-transform:uppercase; }
+    .stat .val { font-size:14px; font-weight:600; }
+    .stat.local { border-color:#1e6b3a; }
+    .stat.cloud { border-color:#1e4a8c; }
+    .stat.cost  { border-color:#7a5b1e; }
+
+    .hpp-conversation { flex:1; overflow-y:auto; padding:24px; display:flex; flex-direction:column; gap:18px; }
+    .hpp-empty { color:#8a93a6; max-width:640px; margin:auto; text-align:left; }
+    .hpp-empty h2 { color:#e7e9ee; }
+    .hpp-empty li { margin:6px 0; }
+    .hpp-empty code { background:#1a1f2a; padding:2px 6px; border-radius:4px; color:#a3b8ff; }
+
+    .hpp-msg { display:flex; flex-direction:column; gap:6px; max-width:78%; }
+    .hpp-msg.user { align-self:flex-end; align-items:flex-end; }
+    .hpp-msg.assistant { align-self:flex-start; align-items:flex-start; }
+    .hpp-msg .bubble { padding:12px 16px; border-radius:14px; line-height:1.5; white-space:pre-wrap; }
+    .hpp-msg.user .bubble { background:#2c3a5a; border-top-right-radius:4px; }
+    .hpp-msg.assistant .bubble { background:#1a1f2a; border:1px solid #262b36; border-top-left-radius:4px; }
+
+    .hpp-badge { font-size:11px; display:inline-flex; align-items:center; gap:8px; padding:4px 10px; border-radius:999px; font-weight:600; }
+    .hpp-badge.local { background:rgba(46,160,67,0.15); color:#3fb950; border:1px solid #2ea043; }
+    .hpp-badge.cloud { background:rgba(56,139,253,0.15); color:#58a6ff; border:1px solid #388bfd; }
+    .hpp-badge .why { font-weight:400; opacity:0.75; margin-left:6px; }
+
+    .caret { animation:blink 1s steps(2) infinite; }
+    @@keyframes blink { 50% { opacity:0; } }
+
+    .hpp-error { background:#3b1f24; border:1px solid #7d2a35; color:#ff8a9a; padding:10px 14px; border-radius:8px; }
+
+    .hpp-composer { display:flex; gap:10px; padding:14px 22px; background:#161a22; border-top:1px solid #262b36; }
+    .hpp-composer textarea { flex:1; resize:none; min-height:48px; max-height:160px; background:#0f1115; color:#e7e9ee; border:1px solid #2c3240; border-radius:8px; padding:10px 12px; font-family:inherit; font-size:14px; }
+    .hpp-composer button { background:#2ea043; color:white; border:0; padding:0 22px; border-radius:8px; font-weight:600; cursor:pointer; }
+    .hpp-composer button:disabled { background:#2c3240; color:#8a93a6; cursor:not-allowed; }
+</style>
+
+@code {
+    private RouterStrategy _strategy = RouterStrategy.RuleBasedPlusSlm;
+    private readonly List<ChatMessage> _history = new();
+    private readonly List<ChatMessageVm> _messages = new();
+    private string _input = string.Empty;
+    private bool _streaming;
+    private string _streamingBuffer = string.Empty;
+    private string? _error;
+    private ChatTurnMetrics? _currentMetrics;
+
+    private int _totalTurns;
+    private int _localTurns;
+    private int _cloudTurns;
+    private decimal _totalCost;
+    private int LocalPct => _totalTurns == 0 ? 0 : (int)Math.Round(_localTurns * 100.0 / _totalTurns);
+
+    private async Task OnKeyDown(KeyboardEventArgs e)
+    {
+        if (e.Key == "Enter" && !e.ShiftKey)
+            await Send();
+    }
+
+    private async Task Send()
+    {
+        if (_streaming || string.IsNullOrWhiteSpace(_input)) return;
+
+        var prompt = _input.Trim();
+        _input = string.Empty;
+        _error = null;
+        _streamingBuffer = string.Empty;
+        _currentMetrics = null;
+        _messages.Add(new ChatMessageVm("user", prompt));
+        _streaming = true;
+        StateHasChanged();
+
+        try
+        {
+            await foreach (var u in Orchestrator.ChatAsync(prompt, _history, _strategy))
+            {
+                if (u.Error is not null)
+                {
+                    _error = u.Error;
+                    break;
+                }
+                if (u.Token is not null)
+                {
+                    _streamingBuffer += u.Token;
+                    StateHasChanged();
+                    await Task.Yield();
+                }
+                if (u.Done && u.Metrics is not null)
+                {
+                    _messages.Add(new ChatMessageVm("assistant", _streamingBuffer, u.Metrics));
+                    _totalTurns++;
+                    if (u.Metrics.Target == RouteTarget.Local) _localTurns++;
+                    else { _cloudTurns++; _totalCost += u.Metrics.EstimatedCostUsd; }
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            _error = ex.Message;
+        }
+        finally
+        {
+            _streaming = false;
+            _streamingBuffer = string.Empty;
+            StateHasChanged();
+        }
+    }
+
+    private void Reset()
+    {
+        _history.Clear();
+        _messages.Clear();
+        _totalTurns = _localTurns = _cloudTurns = 0;
+        _totalCost = 0m;
+        _error = null;
+    }
+}
