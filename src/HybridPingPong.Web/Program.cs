@@ -1,4 +1,4 @@
-using HybridPingPong.Components;
+using HybridPingPong.Web.Components;
 using HybridPingPong.Services;
 
 var builder = WebApplication.CreateBuilder(args);
