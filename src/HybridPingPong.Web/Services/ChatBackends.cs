@@ -27,14 +27,16 @@ public static class ChatBackends
     public const string LocalKey = "local";
     public const string CloudKey = "cloud";
 
-    public static IServiceCollection AddHybridChatBackends(this IServiceCollection services, IConfiguration cfg)
+    public static IServiceCollection AddHybridChatBackends(this IServiceCollection services, 
+        IConfiguration cfg)
     {
         services.Configure<FoundryLocalOptions>(cfg.GetSection("FoundryLocal"));
         services.Configure<AzureFoundryOptions>(cfg.GetSection("AzureFoundry"));
 
-        services.AddKeyedSingleton<IChatClient>(LocalKey, (_, _) =>
+        services.AddKeyedSingleton<IChatClient>(LocalKey, (_ , _) =>
         {
             var o = cfg.GetSection("FoundryLocal").Get<FoundryLocalOptions>() ?? new();
+
             var client = new OpenAIClient(
                 new ApiKeyCredential(string.IsNullOrEmpty(o.ApiKey) ? "not-needed" : o.ApiKey),
                 new OpenAIClientOptions { Endpoint = new Uri(o.Endpoint) });

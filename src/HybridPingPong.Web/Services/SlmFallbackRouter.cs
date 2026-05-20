@@ -61,8 +61,7 @@ public sealed class SlmFallbackRouter : IHybridRouter
             var options = new ChatOptions
             {
                 Temperature = 0.0f,
-                MaxOutputTokens = 80,
-                ResponseFormat = ChatResponseFormat.Json
+                MaxOutputTokens = 80
             };
 
             var response = await _localClient.GetResponseAsync(messages, options, ct);
