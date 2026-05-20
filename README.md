@@ -38,6 +38,8 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
   "Deployment": "gpt-4o-mini"
 }
 ```
+ 
+> Nel caso in cui in Foundry Local si stia utilizzando un modello specifico per una configurazione hardwere, la configurazione `model` in `FoundryLocal` deve essere il nome completo del modello
 
 Con user-secrets:
 ```powershell
