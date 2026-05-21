@@ -1,6 +1,6 @@
 using Microsoft.Extensions.AI;
 
-namespace HybridPingPong.Services;
+namespace HybridPingPong.Core.Services;
 
 public interface IHybridRouter
 {

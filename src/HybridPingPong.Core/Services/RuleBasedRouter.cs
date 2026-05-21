@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
 using Microsoft.Extensions.AI;
 
-namespace HybridPingPong.Services;
+namespace HybridPingPong.Core.Services;
 
 public partial class RuleBasedRouter : IHybridRouter
 {

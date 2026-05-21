@@ -2,9 +2,11 @@ using System.ClientModel;
 using Azure;
 using Azure.AI.OpenAI;
 using Microsoft.Extensions.AI;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
 using OpenAI;
 
-namespace HybridPingPong.Services;
+namespace HybridPingPong.Core.Services;
 
 public sealed class FoundryLocalOptions
 {

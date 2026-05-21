@@ -1,4 +1,4 @@
-namespace HybridPingPong.Services;
+namespace HybridPingPong.Core.Services;
 
 public enum RouteTarget { Local, Cloud }
 

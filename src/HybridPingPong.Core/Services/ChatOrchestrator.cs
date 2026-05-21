@@ -4,7 +4,7 @@ using Microsoft.Extensions.AI;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Options;
 
-namespace HybridPingPong.Services;
+namespace HybridPingPong.Core.Services;
 
 public sealed class StreamUpdate
 {
