@@ -1,4 +1,5 @@
 using System.Text.RegularExpressions;
+using HybridPingPong.Core.Models;
 using Microsoft.Extensions.AI;
 
 namespace HybridPingPong.Core.Services;

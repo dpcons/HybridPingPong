@@ -1,4 +1,5 @@
 using Microsoft.Extensions.AI;
+using HybridPingPong.Core.Models;
 
 namespace HybridPingPong.Core.Services;
 

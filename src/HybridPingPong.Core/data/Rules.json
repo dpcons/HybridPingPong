@@ -1,0 +1,56 @@
+{
+  "piiKeywords": [
+    "codice fiscale",
+    "iban",
+    "password",
+    "stipendio",
+    "salary",
+    "diagnosi",
+    "paziente",
+    "patient",
+    "ssn",
+    "credit card",
+    "carta di credito",
+    "contratto interno",
+    "private",
+    "riservato",
+    "confidenziale"
+  ],
+  "complexityKeywords": [
+    "spiega passo passo",
+    "step by step",
+    "dimostra",
+    "prove",
+    "scrivi un'app",
+    "scrivi un programma",
+    "write a program",
+    "analizza in dettaglio",
+    "deep analysis",
+    "confronta in dettaglio",
+    "refactor",
+    "architettura",
+    "design pattern"
+  ],
+  "regexPatterns": [
+    {
+      "name": "IbanRegex",
+      "pattern": "\\b(?:IT\\d{2}[A-Z]\\d{10,22}|[A-Z]{2}\\d{2}[A-Z0-9]{10,30})\\b",
+      "flags": "IgnoreCase"
+    },
+    {
+      "name": "CodiceFiscaleRegex",
+      "pattern": "\\b[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]\\b",
+      "flags": "IgnoreCase"
+    },
+    {
+      "name": "EmailRegex",
+      "pattern": "\\b[\\w.+-]+@[\\w-]+\\.[\\w.-]+\\b",
+      "flags": "None"
+    },
+    {
+      "name": "CreditCardRegex",
+      "pattern": "\\b(?:\\d[ -]*?){13,19}\\b",
+      "flags": "None"
+    }
+  ]
+}
