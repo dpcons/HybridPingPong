@@ -6,6 +6,11 @@ using Microsoft.Extensions.Logging;
 
 namespace HybridPingPong.Core.Services;
 
+/// <summary>
+/// A hybrid router that first applies hard rules (PII detection, complexity keywords)
+/// and then delegates ambiguous cases to the local SLM for a classification decision.
+/// Falls back to the rule-based result if the SLM call fails.
+/// </summary>
 public sealed class SlmFallbackRouter : IHybridRouter
 {
     public RouterStrategy Strategy => RouterStrategy.RuleBasedPlusSlm;

@@ -3,6 +3,11 @@ using Microsoft.Extensions.AI;
 
 namespace HybridPingPong.Core.Services;
 
+/// <summary>
+/// A deterministic router that uses keyword matching and regex patterns to detect
+/// PII, sensitive data, or complex prompts and route them accordingly.
+/// Messages containing personal data are kept local; complex or long prompts go to the cloud.
+/// </summary>
 public partial class RuleBasedRouter : IHybridRouter
 {
     public RouterStrategy Strategy => RouterStrategy.RuleBased;

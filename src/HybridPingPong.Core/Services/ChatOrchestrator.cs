@@ -6,14 +6,28 @@ using Microsoft.Extensions.Options;
 
 namespace HybridPingPong.Core.Services;
 
+/// <summary>
+/// Represents a single incremental update emitted during a streaming chat response.
+/// </summary>
 public sealed class StreamUpdate
 {
+    /// <summary>A text token fragment from the model response, or <c>null</c> if not a content update.</summary>
     public string? Token { get; init; }
+
+    /// <summary>Indicates whether the stream has completed.</summary>
     public bool Done { get; init; }
+
+    /// <summary>Final metrics for the completed turn, available when <see cref="Done"/> is <c>true</c>.</summary>
     public ChatTurnMetrics? Metrics { get; init; }
+
+    /// <summary>An error message if the stream failed, or <c>null</c> on success.</summary>
     public string? Error { get; init; }
 }
 
+/// <summary>
+/// Orchestrates hybrid chat interactions by routing user messages to the appropriate
+/// backend (local SLM or cloud LLM) and streaming the response back to the caller.
+/// </summary>
 public sealed class ChatOrchestrator
 {
     private readonly IServiceProvider _sp;
@@ -33,6 +47,14 @@ public sealed class ChatOrchestrator
     private IHybridRouter ResolveRouter(RouterStrategy strategy) =>
         _sp.GetRequiredKeyedService<IHybridRouter>(strategy);
 
+    /// <summary>
+    /// Sends a user message through the hybrid routing pipeline and streams the response.
+    /// </summary>
+    /// <param name="userMessage">The user's input message.</param>
+    /// <param name="history">The mutable conversation history (updated in place).</param>
+    /// <param name="strategy">The routing strategy to apply.</param>
+    /// <param name="ct">Cancellation token.</param>
+    /// <returns>An async stream of <see cref="StreamUpdate"/> tokens and a final metrics update.</returns>
     public async IAsyncEnumerable<StreamUpdate> ChatAsync(
         string userMessage,
         List<ChatMessage> history,
