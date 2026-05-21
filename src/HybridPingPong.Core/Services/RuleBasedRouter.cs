@@ -1,5 +1,6 @@
 using System.Text.RegularExpressions;
 using HybridPingPong.Core.Models;
+using HybridPingPong.Core.Utilities;
 using Microsoft.Extensions.AI;
 
 namespace HybridPingPong.Core.Services;
@@ -7,64 +8,40 @@ namespace HybridPingPong.Core.Services;
 /// <summary>
 /// A deterministic router that uses keyword matching and regex patterns to detect
 /// PII, sensitive data, or complex prompts and route them accordingly.
+/// Rules are loaded from <c>data/Rules.json</c> via <see cref="RulesLoader"/>.
 /// Messages containing personal data are kept local; complex or long prompts go to the cloud.
 /// </summary>
-public partial class RuleBasedRouter : IHybridRouter
+public class RuleBasedRouter : IHybridRouter
 {
     public RouterStrategy Strategy => RouterStrategy.RuleBased;
 
-    private static readonly string[] PiiKeywords =
-    {
-        "codice fiscale", "iban", "password", "stipendio", "salary",
-        "diagnosi", "paziente", "patient", "ssn", "credit card",
-        "carta di credito", "contratto interno", "private",
-        "riservato", "confidenziale"
-    };
-
-    private static readonly string[] ComplexityKeywords =
-    {
-        "spiega passo passo", "step by step", "dimostra", "prove",
-        "scrivi un'app", "scrivi un programma", "write a program",
-        "analizza in dettaglio", "deep analysis", "confronta in dettaglio",
-        "refactor", "architettura", "design pattern"
-    };
-
-    [GeneratedRegex(@"\b(?:IT\d{2}[A-Z]\d{10,22}|[A-Z]{2}\d{2}[A-Z0-9]{10,30})\b", RegexOptions.IgnoreCase)]
-    private static partial Regex IbanRegex();
-
-    [GeneratedRegex(@"\b[A-Z]{6}\d{2}[A-Z]\d{2}[A-Z]\d{3}[A-Z]\b", RegexOptions.IgnoreCase)]
-    private static partial Regex CodiceFiscaleRegex();
-
-    [GeneratedRegex(@"\b[\w.+-]+@[\w-]+\.[\w.-]+\b")]
-    private static partial Regex EmailRegex();
-
-    [GeneratedRegex(@"\b(?:\d[ -]*?){13,19}\b")]
-    private static partial Regex CreditCardRegex();
+    private static readonly RuleData _rules = RulesLoader.Load(
+        Path.Combine(AppContext.BaseDirectory, "data", "Rules.json"));
 
     public Task<RoutingDecision> RouteAsync(string userMessage, IReadOnlyList<ChatMessage> history, CancellationToken ct = default)
         => Task.FromResult(Decide(userMessage, history));
 
-    internal static RoutingDecision Decide(string userMessage, IReadOnlyList<ChatMessage> history)
+    private static RoutingDecision Decide(string userMessage, IReadOnlyList<ChatMessage> history)
     {
         var lower = userMessage.ToLowerInvariant();
 
-        if (IbanRegex().IsMatch(userMessage))
-            return new(RouteTarget.Local, "IBAN detected in prompt", "rule");
-        if (CodiceFiscaleRegex().IsMatch(userMessage))
-            return new(RouteTarget.Local, "Italian fiscal code detected", "rule");
-        if (CreditCardRegex().IsMatch(userMessage))
-            return new(RouteTarget.Local, "Credit-card-like number detected", "rule");
-        if (EmailRegex().IsMatch(userMessage))
-            return new(RouteTarget.Local, "Email address detected", "rule");
+        foreach (var p in _rules.RegexPatterns)
+        {
+            var options = p.Flags.Equals("IgnoreCase", StringComparison.OrdinalIgnoreCase)
+                ? RegexOptions.IgnoreCase
+                : RegexOptions.None;
+            if (Regex.IsMatch(userMessage, p.Pattern, options, TimeSpan.FromSeconds(1)))
+                return new(RouteTarget.Local, p.Reason, "rule");
+        }
 
-        foreach (var k in PiiKeywords)
+        foreach (var k in _rules.PiiKeywords)
             if (lower.Contains(k))
                 return new(RouteTarget.Local, $"Sensitive keyword: '{k}'", "rule");
 
         if (userMessage.Length > 400)
             return new(RouteTarget.Cloud, $"Long prompt ({userMessage.Length} chars)", "rule");
 
-        foreach (var k in ComplexityKeywords)
+        foreach (var k in _rules.ComplexityKeywords)
             if (lower.Contains(k))
                 return new(RouteTarget.Cloud, $"Complex task keyword: '{k}'", "rule");
 

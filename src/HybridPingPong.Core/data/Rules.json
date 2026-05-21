@@ -35,21 +35,25 @@
     {
       "name": "IbanRegex",
       "pattern": "\\b(?:IT\\d{2}[A-Z]\\d{10,22}|[A-Z]{2}\\d{2}[A-Z0-9]{10,30})\\b",
+      "reason": "IBAN detected in prompt",
       "flags": "IgnoreCase"
     },
     {
       "name": "CodiceFiscaleRegex",
       "pattern": "\\b[A-Z]{6}\\d{2}[A-Z]\\d{2}[A-Z]\\d{3}[A-Z]\\b",
+      "reason": "Italian fiscal code detected",
       "flags": "IgnoreCase"
     },
     {
       "name": "EmailRegex",
       "pattern": "\\b[\\w.+-]+@[\\w-]+\\.[\\w.-]+\\b",
+      "reason": "Email address detected",
       "flags": "None"
     },
     {
       "name": "CreditCardRegex",
       "pattern": "\\b(?:\\d[ -]*?){13,19}\\b",
+      "reason": "Credit-card-like number detected",
       "flags": "None"
     }
   ]

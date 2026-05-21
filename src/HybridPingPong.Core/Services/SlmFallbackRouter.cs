@@ -17,6 +17,7 @@ public sealed class SlmFallbackRouter : IHybridRouter
     public RouterStrategy Strategy => RouterStrategy.RuleBasedPlusSlm;
 
     private readonly IChatClient _localClient;
+    private readonly IHybridRouter _ruleRouter;
     private readonly ILogger<SlmFallbackRouter> _log;
 
     private const string RouterSystemPrompt = """
@@ -38,15 +39,17 @@ public sealed class SlmFallbackRouter : IHybridRouter
 
     public SlmFallbackRouter(
         [FromKeyedServices(ChatBackends.LocalKey)] IChatClient localClient,
+        [FromKeyedServices(RouterStrategy.RuleBased)] IHybridRouter ruleRouter,
         ILogger<SlmFallbackRouter> log)
     {
         _localClient = localClient;
-        _log = log;
+        _ruleRouter  = ruleRouter;
+        _log         = log;
     }
 
     public async Task<RoutingDecision> RouteAsync(string userMessage, IReadOnlyList<ChatMessage> history, CancellationToken ct = default)
     {
-        var ruleDecision = RuleBasedRouter.Decide(userMessage, history);
+        var ruleDecision = await _ruleRouter.RouteAsync(userMessage, history, ct);
         var reason = ruleDecision.Reason;
         var isHardRule =
             reason.StartsWith("IBAN") || reason.StartsWith("Italian fiscal")
