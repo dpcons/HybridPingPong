@@ -14,6 +14,7 @@ builder.Services.AddHybridChatBackends(builder.Configuration);
 builder.Services.AddKeyedSingleton<IHybridRouter, RuleBasedRouter>(RouterStrategy.RuleBased);
 builder.Services.AddKeyedSingleton<IHybridRouter, SlmFallbackRouter>(RouterStrategy.RuleBasedPlusSlm);
 builder.Services.AddKeyedSingleton<IHybridRouter, AlwaysCloudRouter>(RouterStrategy.AlwaysCloud);
+builder.Services.AddKeyedSingleton<IHybridRouter, AlwaysLocalRouter>(RouterStrategy.AlwaysLocal);
 
 builder.Services.AddSingleton<ChatOrchestrator>();
 

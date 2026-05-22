@@ -10,5 +10,7 @@ public enum RouterStrategy
     /// <summary>Rule-based routing with SLM fallback for ambiguous cases.</summary>
     RuleBasedPlusSlm,
     /// <summary>Always routes to the cloud LLM regardless of content.</summary>
-    AlwaysCloud
+    AlwaysCloud,
+    /// <summary>Always routes to the local SLM regardless of content.</summary>
+    AlwaysLocal
 }
