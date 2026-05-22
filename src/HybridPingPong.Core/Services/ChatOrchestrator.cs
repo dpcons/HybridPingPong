@@ -27,8 +27,8 @@ public sealed class ChatOrchestrator
         _cloudOpts = cloudOpts;
     }
 
-    private IHybridRouter ResolveRouter(RouterStrategy strategy) =>
-        _sp.GetRequiredKeyedService<IHybridRouter>(strategy);
+    private IModelRouter ResolveRouter(RouterStrategy strategy) =>
+        _sp.GetRequiredKeyedService<IModelRouter>(strategy);
 
     /// <summary>
     /// Sends a user message through the hybrid routing pipeline and streams the response.

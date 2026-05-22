@@ -11,10 +11,10 @@ builder.Services.AddRazorComponents()
 builder.Services.AddHybridChatBackends(builder.Configuration);
 
 // Routers: keyed by strategy enum so the UI can switch live
-builder.Services.AddKeyedSingleton<IHybridRouter, RuleBasedRouter>(RouterStrategy.RuleBased);
-builder.Services.AddKeyedSingleton<IHybridRouter, SlmFallbackRouter>(RouterStrategy.RuleBasedPlusSlm);
-builder.Services.AddKeyedSingleton<IHybridRouter, AlwaysCloudRouter>(RouterStrategy.AlwaysCloud);
-builder.Services.AddKeyedSingleton<IHybridRouter, AlwaysLocalRouter>(RouterStrategy.AlwaysLocal);
+builder.Services.AddKeyedSingleton<IModelRouter, RuleBasedRouter>(RouterStrategy.RuleBased);
+builder.Services.AddKeyedSingleton<IModelRouter, SlmFallbackRouter>(RouterStrategy.RuleBasedPlusSlm);
+builder.Services.AddKeyedSingleton<IModelRouter, AlwaysCloudRouter>(RouterStrategy.AlwaysCloud);
+builder.Services.AddKeyedSingleton<IModelRouter, AlwaysLocalRouter>(RouterStrategy.AlwaysLocal);
 
 builder.Services.AddSingleton<ChatOrchestrator>();
 

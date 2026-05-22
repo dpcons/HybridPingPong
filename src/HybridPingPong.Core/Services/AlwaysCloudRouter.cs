@@ -7,7 +7,7 @@ namespace HybridPingPong.Core.Services;
 /// A router that always sends requests to the cloud LLM, bypassing any local processing.
 /// Useful for scenarios where maximum model capability is required regardless of cost or privacy.
 /// </summary>
-public sealed class AlwaysCloudRouter : IHybridRouter
+public sealed class AlwaysCloudRouter : IModelRouter
 {
     public RouterStrategy Strategy => RouterStrategy.AlwaysCloud;
 

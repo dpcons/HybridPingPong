@@ -12,12 +12,12 @@ namespace HybridPingPong.Core.Services;
 /// and then delegates ambiguous cases to the local SLM for a classification decision.
 /// Falls back to the rule-based result if the SLM call fails.
 /// </summary>
-public sealed class SlmFallbackRouter : IHybridRouter
+public sealed class SlmFallbackRouter : IModelRouter
 {
     public RouterStrategy Strategy => RouterStrategy.RuleBasedPlusSlm;
 
     private readonly IChatClient _localClient;
-    private readonly IHybridRouter _ruleRouter;
+    private readonly IModelRouter _ruleRouter;
     private readonly ILogger<SlmFallbackRouter> _log;
 
     private const string RouterSystemPrompt = """
@@ -39,7 +39,7 @@ public sealed class SlmFallbackRouter : IHybridRouter
 
     public SlmFallbackRouter(
         [FromKeyedServices(ChatBackends.LocalKey)] IChatClient localClient,
-        [FromKeyedServices(RouterStrategy.RuleBased)] IHybridRouter ruleRouter,
+        [FromKeyedServices(RouterStrategy.RuleBased)] IModelRouter ruleRouter,
         ILogger<SlmFallbackRouter> log)
     {
         _localClient = localClient;

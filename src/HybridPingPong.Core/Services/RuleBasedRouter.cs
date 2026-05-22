@@ -11,7 +11,7 @@ namespace HybridPingPong.Core.Services;
 /// Rules are loaded from <c>data/Rules.json</c> via <see cref="RulesLoader"/>.
 /// Messages containing personal data are kept local; complex or long prompts go to the cloud.
 /// </summary>
-public class RuleBasedRouter : IHybridRouter
+public class RuleBasedRouter : IModelRouter
 {
     public RouterStrategy Strategy => RouterStrategy.RuleBased;
 

@@ -7,7 +7,7 @@ namespace HybridPingPong.Core.Services;
 /// A router that always sends requests to the local SLM, bypassing any cloud processing.
 /// Useful for scenarios where privacy and low latency are prioritised over model capability.
 /// </summary>
-public sealed class AlwaysLocalRouter : IHybridRouter
+public sealed class AlwaysLocalRouter : IModelRouter
 {
     public RouterStrategy Strategy => RouterStrategy.AlwaysLocal;
 

@@ -4,10 +4,10 @@ using HybridPingPong.Core.Models;
 namespace HybridPingPong.Core.Services;
 
 /// <summary>
-/// Defines a hybrid routing strategy that decides whether a chat message
+/// Defines a routing strategy that decides whether a chat message
 /// should be processed by the local SLM or the cloud LLM.
 /// </summary>
-public interface IHybridRouter
+public interface IModelRouter
 {
     /// <summary>Gets the routing strategy this router implements.</summary>
     RouterStrategy Strategy { get; }

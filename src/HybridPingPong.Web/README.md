@@ -71,8 +71,8 @@ Tokens are streamed token-by-token using `IAsyncEnumerable<StreamUpdate>` from t
 
 ```
 AddHybridChatBackends()           ← registers IChatClient (local + cloud) as keyed singletons
-AddKeyedSingleton<IHybridRouter>  ← RuleBasedRouter        (key: RouterStrategy.RuleBased)
-AddKeyedSingleton<IHybridRouter>  ← SlmFallbackRouter      (key: RouterStrategy.RuleBasedPlusSlm)
+AddKeyedSingleton<IModelRouter>  ← RuleBasedRouter        (key: RouterStrategy.RuleBased)
+AddKeyedSingleton<IModelRouter>  ← SlmFallbackRouter      (key: RouterStrategy.RuleBasedPlusSlm)
 AddSingleton<ChatOrchestrator>    ← orchestrates routing + streaming
 AddRazorComponents()
   .AddInteractiveServerComponents ← Blazor Server render mode

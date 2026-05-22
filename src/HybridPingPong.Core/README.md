@@ -18,7 +18,7 @@ The project is organised into three layers:
 
 ```mermaid
 classDiagram
-    class IHybridRouter {
+    class IModelRouter {
         <<interface>>
         +RouterStrategy Strategy
         +RouteAsync(userMessage, history, ct) Task~RoutingDecision~
@@ -55,16 +55,16 @@ classDiagram
 
     class ChatOrchestrator {
         +ChatAsync(userMessage, history, strategy, ct) IAsyncEnumerable~StreamUpdate~
-        -ResolveRouter(strategy) IHybridRouter
+        -ResolveRouter(strategy) IModelRouter
         -EstimateTokens(s) int
     }
 
-    IHybridRouter <|.. RuleBasedRouter
-    IHybridRouter <|.. SlmFallbackRouter
-    IHybridRouter <|.. AlwaysCloudRouter
-    IHybridRouter <|.. AlwaysLocalRouter
-    SlmFallbackRouter --> IHybridRouter : wraps (ruleRouter)
-    ChatOrchestrator --> IHybridRouter : resolves and uses
+    IModelRouter <|.. RuleBasedRouter
+    IModelRouter <|.. SlmFallbackRouter
+    IModelRouter <|.. AlwaysCloudRouter
+    IModelRouter <|.. AlwaysLocalRouter
+    SlmFallbackRouter --> IModelRouter : wraps (ruleRouter)
+    ChatOrchestrator --> IModelRouter : resolves and uses
     ChatOrchestrator --> ChatBackends : resolves backends from
     SlmFallbackRouter --> ChatBackends : uses LocalKey
 ```
