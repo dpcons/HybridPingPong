@@ -21,6 +21,7 @@
                 <select @bind="_strategy" disabled="@_streaming">
                     <option value="@RouterStrategy.RuleBased">Rule-based</option>
                     <option value="@RouterStrategy.RuleBasedPlusSlm">Rule-based + SLM</option>
+                    <option value="@RouterStrategy.AlwaysCloud">Always Cloud</option>
                 </select>
             </label>
             <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">Reset</button>

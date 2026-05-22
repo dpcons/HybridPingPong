@@ -1,6 +1,6 @@
 # HybridPingPong.Core
 
-This library contains the domain logic for the **HybridPingPong** project. It provides a hybrid AI routing engine that decides, for each chat turn, whether to dispatch a request to a **local** model (Foundry Local) or to the **cloud** (Azure AI Foundry). The routing can be purely rule-based (deterministic, explainable) or augmented with an SLM classifier for ambiguous cases.
+This library contains the domain logic for the **HybridPingPong** project. It provides a hybrid AI routing engine that decides, for each chat turn, whether to dispatch a request to a **local** model (Foundry Local) or to the **cloud** (Azure AI Foundry). The routing can be purely rule-based (deterministic, explainable), augmented with an SLM classifier for ambiguous cases, or configured to always use the cloud model.
 
 The project is organised into three layers:
 
@@ -36,6 +36,11 @@ classDiagram
         -ParseJson(raw) ValueTuple~RouteTarget, string~
     }
 
+    class AlwaysCloudRouter {
+        +RouterStrategy Strategy
+        +RouteAsync(userMessage, history, ct) Task~RoutingDecision~
+    }
+
     class ChatBackends {
         <<static>>
         +string LocalKey$
@@ -51,6 +56,7 @@ classDiagram
 
     IHybridRouter <|.. RuleBasedRouter
     IHybridRouter <|.. SlmFallbackRouter
+    IHybridRouter <|.. AlwaysCloudRouter
     SlmFallbackRouter --> IHybridRouter : wraps (ruleRouter)
     ChatOrchestrator --> IHybridRouter : resolves and uses
     ChatOrchestrator --> ChatBackends : resolves backends from
@@ -73,6 +79,7 @@ classDiagram
         <<enumeration>>
         RuleBased
         RuleBasedPlusSlm
+        AlwaysCloud
     }
 
     class RoutingDecision {
