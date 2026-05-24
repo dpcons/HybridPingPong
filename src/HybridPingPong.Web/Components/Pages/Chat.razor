@@ -11,28 +11,28 @@
             <span class="hpp-logo">🏓</span>
             <div>
                 <h1>Hybrid Ping-Pong</h1>
-                <p class="hpp-sub">Foundry Local ↔ Azure AI Foundry — smart routing demo</p>
+                <p class="hpp-sub">Foundry Local ↔ Azure AI Foundry — demo di instradamento intelligente</p>
             </div>
         </div>
 
         <div class="hpp-controls">
             <label class="hpp-strategy">
-                Routing:
+                Instradamento:
                 <select @bind="_strategy" disabled="@_streaming">
-                    <option value="@RouterStrategy.RuleBased">Rule-based</option>
-                    <option value="@RouterStrategy.RuleBasedPlusSlm">Rule-based + SLM</option>
-                    <option value="@RouterStrategy.AlwaysCloud">Always Cloud</option>
-                    <option value="@RouterStrategy.AlwaysLocal">Always Local</option>
+                    <option value="@RouterStrategy.RuleBased">Basato su regole</option>
+                    <option value="@RouterStrategy.RuleBasedPlusSlm">Regole + SLM</option>
+                    <option value="@RouterStrategy.AlwaysCloud">Sempre Cloud</option>
+                    <option value="@RouterStrategy.AlwaysLocal">Sempre Locale</option>
                 </select>
             </label>
-            <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">Reset</button>
+            <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">Nuova Chat</button>
         </div>
 
         <div class="hpp-stats">
-            <div class="stat"><span class="lbl">Turns</span><span class="val">@_totalTurns</span></div>
-            <div class="stat local"><span class="lbl">🟢 Local</span><span class="val">@_localTurns (@LocalPct%)</span></div>
+            <div class="stat"><span class="lbl">Turni</span><span class="val">@_totalTurns</span></div>
+            <div class="stat local"><span class="lbl">🟢 Locale</span><span class="val">@_localTurns (@LocalPct%)</span></div>
             <div class="stat cloud"><span class="lbl">🔵 Cloud</span><span class="val">@_cloudTurns</span></div>
-            <div class="stat cost"><span class="lbl">💰 Cloud cost</span><span class="val">$@_totalCost.ToString("F4")</span></div>
+            <div class="stat cost"><span class="lbl">💰 Costo cloud</span><span class="val">€@_totalCost.ToString("F4")</span></div>
         </div>
     </header>
 
@@ -40,10 +40,10 @@
         @if (_messages.Count == 0)
         {
             <div class="hpp-empty">
-                <h2>Try these on stage 👇</h2>
+                <h2>Prova questi esempi 👇</h2>
                 <ul>
-                    <li><code>Ciao, come stai?</code> — short chat → 🟢 local</li>
-                    <li><code>Il mio IBAN è IT60X0542811101000000123456</code> → 🟢 local (PII)</li>
+                    <li><code>Ciao, come stai?</code> — chat breve → 🟢 locale</li>
+                    <li><code>Il mio IBAN è IT60X0542811101000000123456</code> → 🟢 locale (dati sensibili)</li>
                     <li><code>Scrivimi un'analisi comparativa dettagliata tra REST e GraphQL con esempi di codice</code> → 🔵 cloud</li>
                 </ul>
             </div>
@@ -54,8 +54,8 @@
                 @if (m.Role == "assistant" && m.Metrics is not null)
                 {
                     <div class="hpp-badge @(m.Metrics.Target == RouteTarget.Local ? "local" : "cloud")"
-                         title="@m.Metrics.Reason (by @m.Metrics.DecidedBy)">
-                        @(m.Metrics.Target == RouteTarget.Local ? "🟢 LOCAL" : "🔵 CLOUD")
+                         title="@m.Metrics.Reason (da @m.Metrics.DecidedBy)">
+                            @(m.Metrics.Target == RouteTarget.Local ? "🟢 LOCALE" : "🔵 CLOUD")
                         · @m.Metrics.ModelName
                         · @m.Metrics.LatencyMs ms
                         · ttft @m.Metrics.FirstTokenMs ms
@@ -63,7 +63,7 @@
                         {
                             <span> · $@m.Metrics.EstimatedCostUsd.ToString("F4")</span>
                         }
-                        <span class="why">why? @m.Metrics.Reason</span>
+                        <span class="why">perché? @m.Metrics.Reason</span>
                     </div>
                 }
                 <div class="bubble">@m.Content</div>
@@ -75,9 +75,9 @@
                 @if (_currentMetrics is not null)
                 {
                     <div class="hpp-badge @(_currentMetrics.Target == RouteTarget.Local ? "local" : "cloud")">
-                        @(_currentMetrics.Target == RouteTarget.Local ? "🟢 LOCAL" : "🔵 CLOUD")
-                        · routing by @_currentMetrics.DecidedBy
-                        <span class="why">why? @_currentMetrics.Reason</span>
+                        @(_currentMetrics.Target == RouteTarget.Local ? "🟢 LOCALE" : "🔵 CLOUD")
+                        · instradato da @_currentMetrics.DecidedBy
+                        <span class="why">perché? @_currentMetrics.Reason</span>
                     </div>
                 }
                 <div class="bubble">@_streamingBuffer<span class="caret">▍</span></div>
@@ -92,10 +92,10 @@
     <footer class="hpp-composer">
         <textarea @bind="_input" @bind:event="oninput"
                   @onkeydown="OnKeyDown"
-                  placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
+                  placeholder="Scrivi il tuo messaggio... (Invio per inviare, Maiusc+Invio per andare a capo)"
                   disabled="@_streaming"></textarea>
         <button @onclick="Send" disabled="@(_streaming || string.IsNullOrWhiteSpace(_input))">
-            @(_streaming ? "..." : "Send")
+            @(_streaming ? "..." : "Invia")
         </button>
     </footer>
 </div>
