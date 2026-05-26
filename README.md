@@ -66,6 +66,68 @@ Apri `https://localhost:7xxx/chat`.
 | 4 | Switch a `Rule-based + SLM` e prova: `Inventami una favola di 200 parole` | 🔵 CLOUD (deciso dall'SLM) |
 | 5 | Mostra il counter: *"abbiamo servito N% delle query in locale, risparmiando $X di cloud"* |
 
+## Prompt suggeriti per strategia
+
+### 🔀 Rule-based
+
+Strategia deterministica basata su keyword, regex e soglie. Prevedibile e spiegabile.
+
+| # | Prompt | Risultato atteso |
+|---|--------|-----------------|
+| 1 | `Ciao, come stai?` | 🟢 LOCAL · query breve e semplice (default) |
+| 2 | `Che tempo fa oggi a Milano?` | 🟢 LOCAL · query breve e semplice (default) |
+| 3 | `Raccontami una barzelletta` | 🟢 LOCAL · query breve e semplice (default) |
+| 4 | `Il mio codice fiscale è RSSMRA85M01H501Z, è corretto?` | 🟢 LOCAL · regex codice fiscale rilevato |
+| 5 | `Il mio IBAN è IT60X0542811101000000123456, puoi verificarlo?` | 🟢 LOCAL · regex IBAN rilevato |
+| 6 | `Invia la conferma a mario.rossi@example.com` | 🟢 LOCAL · regex email rilevata |
+| 7 | `Lo stipendio netto del dipendente è di 2.500€` | 🟢 LOCAL · keyword sensibile: "stipendio" |
+| 8 | `La diagnosi del paziente indica una frattura al polso` | 🟢 LOCAL · keyword sensibile: "diagnosi" / "paziente" |
+| 9 | `Spiega passo passo come funziona il protocollo TCP/IP` | 🔵 CLOUD · keyword di complessità: "spiega passo passo" |
+| 10 | `Scrivi un programma in Python che ordina una lista e gestisce le eccezioni, con test unitari e documentazione completa per ogni metodo, includendo anche un esempio di utilizzo e le istruzioni per il deploy su un server di produzione con Docker e Kubernetes` | 🔵 CLOUD · prompt lungo (>400 caratteri) + keyword "scrivi un programma" |
+
+### 🔀🤖 Rule-based + SLM fallback
+
+Le regole hard (PII, complessità, lunghezza) si applicano per prime; nei casi ambigui decide l'SLM locale con un JSON `{target, reason}`.
+
+| # | Prompt | Risultato atteso |
+|---|--------|-----------------|
+| 1 | `Buongiorno!` | 🟢 LOCAL · SLM: chitchat/saluto semplice |
+| 2 | `Cos'è il machine learning in due parole?` | 🟢 LOCAL · SLM: domanda breve e semplice |
+| 3 | `Traduci "buongiorno" in giapponese` | 🟢 LOCAL · SLM: task semplice di traduzione |
+| 4 | `Il contratto interno prevede un bonus del 10%` | 🟢 LOCAL · regola hard: keyword "contratto interno" |
+| 5 | `La carta di credito 4111 1111 1111 1111 è stata bloccata` | 🟢 LOCAL · regola hard: keyword "carta di credito" + regex numero carta |
+| 6 | `Analizza in dettaglio i pro e contro di microservizi vs monolite` | 🔵 CLOUD · regola hard: keyword "analizza in dettaglio" |
+| 7 | `Inventami una favola di 200 parole ambientata nello spazio` | 🔵 CLOUD · SLM: scrittura creativa long-form |
+| 8 | `Scrivi un'app web in React con autenticazione e CRUD completo` | 🔵 CLOUD · regola hard: keyword "scrivi un'app" |
+| 9 | `Confronta le architetture ARM e x86 dal punto di vista energetico, prestazionale e di costo` | 🔵 CLOUD · regola hard: keyword "architettura" |
+| 10 | `Quali sono i 3 linguaggi più usati nel 2025?` | 🟢 LOCAL · SLM: domanda fattuale breve |
+
+### 🟢 Always Local
+
+Tutte le richieste vengono inviate al modello locale (SLM), indipendentemente dal contenuto. Utile per massimizzare privacy e minimizzare latenza/costi.
+
+| # | Prompt | Risultato atteso |
+|---|--------|-----------------|
+| 1 | `Ciao, presentati` | 🟢 LOCAL · sempre locale |
+| 2 | `Scrivi un saggio di 1000 parole sull'intelligenza artificiale` | 🟢 LOCAL · sempre locale (anche se complesso) |
+| 3 | `Spiega passo passo la teoria della relatività` | 🟢 LOCAL · sempre locale (ignora keyword complessità) |
+| 4 | `Il mio IBAN è IT60X0542811101000000123456` | 🟢 LOCAL · sempre locale |
+| 5 | `Confronta in dettaglio Python e JavaScript` | 🟢 LOCAL · sempre locale |
+
+### 🔵 Always Cloud
+
+Tutte le richieste vengono inviate al modello cloud (LLM), indipendentemente dal contenuto. Utile quando serve la massima capacità del modello.
+
+| # | Prompt | Risultato atteso |
+|---|--------|-----------------|
+| 1 | `Ciao, come va?` | 🔵 CLOUD · sempre cloud |
+| 2 | `Che ore sono?` | 🔵 CLOUD · sempre cloud (anche se banale) |
+| 3 | `Il mio codice fiscale è RSSMRA85M01H501Z` | 🔵 CLOUD · sempre cloud (⚠️ PII inviato al cloud!) |
+| 4 | `Scrivi un compilatore completo in Rust` | 🔵 CLOUD · sempre cloud |
+| 5 | `Dimmi una curiosità` | 🔵 CLOUD · sempre cloud |
+
+> **Nota:** Con la strategia *Always Cloud*, i dati sensibili (PII) **non vengono protetti** dal routing locale. Usare con cautela in contesti reali.
+
 ## Punti di estensione
 
 - Cambia modello locale (`qwen2.5-3b`, `llama-3.2-3b`...) in `appsettings.json`.
