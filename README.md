@@ -34,7 +34,41 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
 },
 "AzureFoundry": {
   "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
   "ApiKey": "...",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+### Modalità di autenticazione ad Azure AI Foundry
+
+La proprietà `AzureFoundry:AuthMode` definisce come l'applicazione si autentica all'endpoint cloud. Sono supportate due modalità:
+
+| AuthMode | Proprietà richieste | Quando usarla |
+|---|---|---|
+| `Key` | `Endpoint`, `ApiKey` | Sviluppo locale o scenari semplici basati su shared secret. |
+| `Identity` | `Endpoint`, `TenantId`, `ClientId`, `ClientSecret` | Produzione / scenari enterprise con service principal Entra ID. Il principal deve avere il ruolo *Cognitive Services OpenAI User* sulla risorsa. |
+
+Esempio con autenticazione **Key**:
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
+  "ApiKey": "<api-key>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+Esempio con autenticazione **Entra ID** (service principal):
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Identity",
+  "TenantId": "<tenant-guid>",
+  "ClientId": "<application-guid>",
+  "ClientSecret": "<client-secret>",
   "Deployment": "gpt-4o-mini"
 }
 ```
@@ -46,6 +80,11 @@ Con user-secrets:
 dotnet user-secrets init
 dotnet user-secrets set "AzureFoundry:Endpoint" "https://..."
 dotnet user-secrets set "AzureFoundry:ApiKey" "..."
+# oppure, per Entra ID:
+dotnet user-secrets set "AzureFoundry:AuthMode" "Identity"
+dotnet user-secrets set "AzureFoundry:TenantId" "<tenant-guid>"
+dotnet user-secrets set "AzureFoundry:ClientId" "<application-guid>"
+dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 ```
 
 ## Run
@@ -59,7 +98,7 @@ Apri `https://localhost:7xxx/chat`.
 ## Script demo (90 secondi)
 
 | # | Prompt | Atteso |
-|---|---|---|
+| --- | --- | --- |
 | 1 | `Ciao, come stai?` | 🟢 LOCAL · default short query |
 | 2 | `Il mio IBAN è IT60X0542811101000000123456, puoi spiegarmi come funziona?` | 🟢 LOCAL · **PII detected** |
 | 3 | `Scrivimi un'analisi comparativa dettagliata tra REST e GraphQL con esempi di codice in 500 parole` | 🔵 CLOUD · long prompt / complex task |

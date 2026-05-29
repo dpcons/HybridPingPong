@@ -124,10 +124,20 @@ classDiagram
         +ChatTurnMetrics? Metrics
     }
 
+    class AzureFoundryAuthMode {
+        <<enumeration>>
+        Key
+        Identity
+    }
+
     class AzureFoundryOptions {
         <<sealed>>
         +string Endpoint
+        +AzureFoundryAuthMode AuthMode
         +string ApiKey
+        +string TenantId
+        +string ClientId
+        +string ClientSecret
         +string Deployment
         +decimal InputPricePer1K
         +decimal OutputPricePer1K
@@ -144,6 +154,7 @@ classDiagram
     ChatTurnMetrics --> RouteTarget : Target
     StreamUpdate --> ChatTurnMetrics : Metrics
     ChatMessageVm --> ChatTurnMetrics : Metrics
+    AzureFoundryOptions --> AzureFoundryAuthMode : AuthMode
 ```
 
 ---

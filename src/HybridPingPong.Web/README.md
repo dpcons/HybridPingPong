@@ -93,7 +93,11 @@ AddRazorComponents()
   },
   "AzureFoundry": {
     "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+    "AuthMode": "Key",
     "ApiKey": "",
+    "TenantId": "",
+    "ClientId": "",
+    "ClientSecret": "",
     "Deployment": "gpt-4o-mini",
     "InputPricePer1K": 0.00015,
     "OutputPricePer1K": 0.00060
@@ -101,9 +105,47 @@ AddRazorComponents()
 }
 ```
 
-> **Tip:** use user secrets for the Azure API key to avoid committing credentials:
+### Authentication modes for Azure AI Foundry
+
+The `AzureFoundry:AuthMode` property selects how the application authenticates against the cloud endpoint. Two modes are supported:
+
+| AuthMode | Required properties | When to use |
+|---|---|---|
+| `Key` | `Endpoint`, `ApiKey` | Local development or simple shared-secret scenarios. |
+| `Identity` | `Endpoint`, `TenantId`, `ClientId`, `ClientSecret` | Production / enterprise scenarios with an Entra ID service principal. The principal must have the *Cognitive Services OpenAI User* role on the resource. |
+
+**Key example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+  "AuthMode": "Key",
+  "ApiKey": "<api-key>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+**Entra ID (service principal) example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+  "AuthMode": "Identity",
+  "TenantId": "<tenant-guid>",
+  "ClientId": "<application-guid>",
+  "ClientSecret": "<client-secret>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+> **Tip:** use user secrets for the Azure API key or client secret to avoid committing credentials:
 > ```powershell
 > dotnet user-secrets set "AzureFoundry:ApiKey" "your-key-here"
+> # or, for Entra ID:
+> dotnet user-secrets set "AzureFoundry:AuthMode" "Identity"
+> dotnet user-secrets set "AzureFoundry:TenantId" "<tenant-guid>"
+> dotnet user-secrets set "AzureFoundry:ClientId" "<application-guid>"
+> dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 > ```
 
 > **Note on `Model`:** if Foundry Local is running a hardware-specific variant, set `Model` to the full model ID as reported by the Foundry Local endpoint (e.g. `Phi-4-mini-instruct-cuda-gpu:5`).
