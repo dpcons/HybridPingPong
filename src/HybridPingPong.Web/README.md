@@ -93,7 +93,11 @@ AddRazorComponents()
   },
   "AzureFoundry": {
     "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+    "AuthMode": "Key",
     "ApiKey": "",
+    "TenantId": "",
+    "ClientId": "",
+    "ClientSecret": "",
     "Deployment": "gpt-4o-mini",
     "InputPricePer1K": 0.00015,
     "OutputPricePer1K": 0.00060
@@ -101,9 +105,74 @@ AddRazorComponents()
 }
 ```
 
-> **Tip:** use user secrets for the Azure API key to avoid committing credentials:
+### Authentication modes for Azure AI Foundry
+
+The `AzureFoundry:AuthMode` property selects how the application authenticates against the cloud endpoint. Two modes are supported:
+
+| AuthMode | Required properties | When to use |
+|---|---|---|
+| `Key` | `Endpoint`, `ApiKey` | Local development or simple shared-secret scenarios. |
+| `Identity` | `Endpoint`, `TenantId`, `ClientId`, `ClientSecret` | Production / enterprise scenarios with an Entra ID service principal. The principal must have the *Cognitive Services OpenAI User* role on the resource. |
+
+**Key example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+  "AuthMode": "Key",
+  "ApiKey": "<api-key>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+**Entra ID (service principal) example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://YOUR-RESOURCE.openai.azure.com/",
+  "AuthMode": "Identity",
+  "TenantId": "<tenant-guid>",
+  "ClientId": "<application-guid>",
+  "ClientSecret": "<client-secret>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+### Granting the `Azure AI User` role to the service principal
+
+When `AuthMode` is `Identity`, the Entra ID service principal must be authorised to call inference on the model deployed in the Azure AI Foundry project. The minimum required built-in role is:
+
+- **`Azure AI User`** — grants data-plane permissions to invoke chat completions, embeddings and other inference APIs on models deployed in a Foundry project, **without** any management permissions.
+
+> If the target resource is a *classic* Azure OpenAI account (kind `OpenAI`) instead of a Foundry project (kind `AIServices`), use **`Cognitive Services OpenAI User`** instead.
+
+**Assign the role via Azure CLI:**
+
+```powershell
+az role assignment create `
+  --assignee <application-guid> `
+  --role "Azure AI User" `
+  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<foundry-account-name>
+```
+
+The scope can be set at the Foundry account level (covers every project) or narrowed to a specific project / deployment if you need finer-grained access.
+
+**Assign the role via Azure Portal:**
+
+1. Open the Azure AI Foundry account (or the specific project) in the Azure Portal.
+2. Go to **Access control (IAM) → Add → Add role assignment**.
+3. Select the role **Azure AI User**.
+4. Assign access to **User, group, or service principal** and pick the Entra ID application configured in `AzureFoundry:ClientId`.
+5. Save the assignment — role propagation usually completes within a few minutes.
+
+> **Tip:** use user secrets for the Azure API key or client secret to avoid committing credentials:
 > ```powershell
 > dotnet user-secrets set "AzureFoundry:ApiKey" "your-key-here"
+> # or, for Entra ID:
+> dotnet user-secrets set "AzureFoundry:AuthMode" "Identity"
+> dotnet user-secrets set "AzureFoundry:TenantId" "<tenant-guid>"
+> dotnet user-secrets set "AzureFoundry:ClientId" "<application-guid>"
+> dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 > ```
 
 > **Note on `Model`:** if Foundry Local is running a hardware-specific variant, set `Model` to the full model ID as reported by the Foundry Local endpoint (e.g. `Phi-4-mini-instruct-cuda-gpu:5`).

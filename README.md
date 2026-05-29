@@ -1,31 +1,31 @@
 # Hybrid Ping-Pong 🏓
 
-Demo Blazor Server in C# (.NET 10) che mostra una chat semplice il cui **router intelligente** decide a ogni turno se rispondere via **Foundry Local** o **Azure AI Foundry (cloud)**.
+Blazor Server demo in C# (.NET 10) that shows a simple chat whose **smart router** decides, at every turn, whether to reply via **Foundry Local** or **Azure AI Foundry (cloud)**.
 
-Pensata per la sessione *"The Foundry Forge: Crafting AI Solutions from Azure to the Edge"*.
+Designed for the session *"The Foundry Forge: Crafting AI Solutions from Azure to the Edge"*.
 
-## Cosa fa
+## What it does
 
-- Una sola chat, due backend (entrambi OpenAI-compatible) esposti come `IChatClient` (Microsoft.Extensions.AI).
-- **Router switchabile live dalla UI**:
-  - **Rule-based** — regole esplicite (PII, IBAN, codice fiscale, email, complessità, contesto lungo). Deterministico e spiegabile sul palco.
-  - **Rule-based + SLM fallback** — regole hard prima; nei casi grigi un mini-classifier su Foundry Local emette JSON `{target,reason}`.
-- Badge live per ogni risposta: 🟢 LOCAL / 🔵 CLOUD · modello · latenza · time-to-first-token · costo stimato · *"why?"* del router.
-- Counter cumulativo in alto: turns, % local, $ spesi sul cloud.
+- A single chat, two backends (both OpenAI-compatible) exposed as `IChatClient` (Microsoft.Extensions.AI).
+- **Router switchable live from the UI**:
+  - **Rule-based** — explicit rules (PII, IBAN, Italian fiscal code, email, complexity, long context). Deterministic and explainable on stage.
+  - **Rule-based + SLM fallback** — hard rules first; on grey-area cases a mini-classifier on Foundry Local emits a `{target,reason}` JSON.
+- Live badge for every reply: 🟢 LOCAL / 🔵 CLOUD · model · latency · time-to-first-token · estimated cost · router *"why?"*.
+- Cumulative counter at the top: turns, % local, $ spent on cloud.
 
-## Prerequisiti
+## Prerequisites
 
-1. **.NET 10 SDK** (la repo usa `net10.0`).
-2. **Foundry Local** in esecuzione con un modello caricato, es.:
+1. **.NET 10 SDK** (the repo targets `net10.0`).
+2. **Foundry Local** running with a loaded model, e.g.:
    ```powershell
    foundry model run phi-4-mini
    ```
-   Verifica l'endpoint OpenAI-compatible su `http://localhost:5273/v1`.
-3. (Opzionale ma consigliato per la demo completa) Una **Azure AI Foundry / Azure OpenAI** deployment, es. `gpt-4o-mini`.
+   Verify the OpenAI-compatible endpoint at `http://localhost:5273/v1`.
+3. (Optional but recommended for the full demo) An **Azure AI Foundry / Azure OpenAI** deployment, e.g. `gpt-4o-mini`.
 
-## Configurazione
+## Configuration
 
-Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
+Edit `appsettings.json` (or use user-secrets / environment variables):
 
 ```json
 "FoundryLocal": {
@@ -34,18 +34,57 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
 },
 "AzureFoundry": {
   "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
   "ApiKey": "...",
   "Deployment": "gpt-4o-mini"
 }
 ```
- 
-> Nel caso in cui in Foundry Local si stia utilizzando un modello specifico per una configurazione hardwere, la configurazione `model` in `FoundryLocal` deve essere il nome completo del modello
 
-Con user-secrets:
+### Authentication modes for Azure AI Foundry
+
+The `AzureFoundry:AuthMode` property selects how the application authenticates against the cloud endpoint. Two modes are supported:
+
+| AuthMode | Required properties | When to use |
+|---|---|---|
+| `Key` | `Endpoint`, `ApiKey` | Local development or simple shared-secret scenarios. |
+| `Identity` | `Endpoint`, `TenantId`, `ClientId`, `ClientSecret` | Production / enterprise scenarios with an Entra ID service principal. The principal must hold the *Cognitive Services OpenAI User* role on the resource. |
+
+**Key example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
+  "ApiKey": "<api-key>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+**Entra ID (service principal) example:**
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Identity",
+  "TenantId": "<tenant-guid>",
+  "ClientId": "<application-guid>",
+  "ClientSecret": "<client-secret>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+ 
+> If Foundry Local is running a hardware-specific variant of a model, the `Model` property under `FoundryLocal` must be set to the full model name.
+
+With user-secrets:
 ```powershell
 dotnet user-secrets init
 dotnet user-secrets set "AzureFoundry:Endpoint" "https://..."
 dotnet user-secrets set "AzureFoundry:ApiKey" "..."
+# or, for Entra ID:
+dotnet user-secrets set "AzureFoundry:AuthMode" "Identity"
+dotnet user-secrets set "AzureFoundry:TenantId" "<tenant-guid>"
+dotnet user-secrets set "AzureFoundry:ClientId" "<application-guid>"
+dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 ```
 
 ## Run
@@ -54,82 +93,82 @@ dotnet user-secrets set "AzureFoundry:ApiKey" "..."
 dotnet run
 ```
 
-Apri `https://localhost:7xxx/chat`.
+Open `https://localhost:7xxx/chat`.
 
-## Script demo (90 secondi)
+## Demo script (90 seconds)
 
-| # | Prompt | Atteso |
-|---|---|---|
-| 1 | `Ciao, come stai?` | 🟢 LOCAL · default short query |
-| 2 | `Il mio IBAN è IT60X0542811101000000123456, puoi spiegarmi come funziona?` | 🟢 LOCAL · **PII detected** |
-| 3 | `Scrivimi un'analisi comparativa dettagliata tra REST e GraphQL con esempi di codice in 500 parole` | 🔵 CLOUD · long prompt / complex task |
-| 4 | Switch a `Rule-based + SLM` e prova: `Inventami una favola di 200 parole` | 🔵 CLOUD (deciso dall'SLM) |
-| 5 | Mostra il counter: *"abbiamo servito N% delle query in locale, risparmiando $X di cloud"* |
+| # | Prompt | Expected |
+| --- | --- | --- |
+| 1 | `Hi, how are you?` | 🟢 LOCAL · default short query |
+| 2 | `My IBAN is IT60X0542811101000000123456, can you explain how it works?` | 🟢 LOCAL · **PII detected** |
+| 3 | `Write me a detailed comparative analysis between REST and GraphQL with code examples in 500 words` | 🔵 CLOUD · long prompt / complex task |
+| 4 | Switch to `Rule-based + SLM` and try: `Invent a 200-word fairy tale for me` | 🔵 CLOUD (decided by the SLM) |
+| 5 | Show the counter: *"we served N% of the queries locally, saving $X of cloud"* |
 
-## Prompt suggeriti per strategia
+## Suggested prompts by strategy
 
 ### 🔀 Rule-based
 
-Strategia deterministica basata su keyword, regex e soglie. Prevedibile e spiegabile.
+Deterministic strategy based on keywords, regex and thresholds. Predictable and explainable.
 
-| # | Prompt | Risultato atteso |
+| # | Prompt | Expected result |
 |---|--------|-----------------|
-| 1 | `Ciao, come stai?` | 🟢 LOCAL · query breve e semplice (default) |
-| 2 | `Che tempo fa oggi a Milano?` | 🟢 LOCAL · query breve e semplice (default) |
-| 3 | `Raccontami una barzelletta` | 🟢 LOCAL · query breve e semplice (default) |
-| 4 | `Il mio codice fiscale è RSSMRA85M01H501Z, è corretto?` | 🟢 LOCAL · regex codice fiscale rilevato |
-| 5 | `Il mio IBAN è IT60X0542811101000000123456, puoi verificarlo?` | 🟢 LOCAL · regex IBAN rilevato |
-| 6 | `Invia la conferma a mario.rossi@example.com` | 🟢 LOCAL · regex email rilevata |
-| 7 | `Lo stipendio netto del dipendente è di 2.500€` | 🟢 LOCAL · keyword sensibile: "stipendio" |
-| 8 | `La diagnosi del paziente indica una frattura al polso` | 🟢 LOCAL · keyword sensibile: "diagnosi" / "paziente" |
-| 9 | `Spiega passo passo come funziona il protocollo TCP/IP` | 🔵 CLOUD · keyword di complessità: "spiega passo passo" |
-| 10 | `Scrivi un programma in Python che ordina una lista e gestisce le eccezioni, con test unitari e documentazione completa per ogni metodo, includendo anche un esempio di utilizzo e le istruzioni per il deploy su un server di produzione con Docker e Kubernetes` | 🔵 CLOUD · prompt lungo (>400 caratteri) + keyword "scrivi un programma" |
+| 1 | `Hi, how are you?` | 🟢 LOCAL · short and simple query (default) |
+| 2 | `What's the weather in Milan today?` | 🟢 LOCAL · short and simple query (default) |
+| 3 | `Tell me a joke` | 🟢 LOCAL · short and simple query (default) |
+| 4 | `My fiscal code is RSSMRA85M01H501Z, is it correct?` | 🟢 LOCAL · fiscal-code regex detected |
+| 5 | `My IBAN is IT60X0542811101000000123456, can you verify it?` | 🟢 LOCAL · IBAN regex detected |
+| 6 | `Send the confirmation to mario.rossi@example.com` | 🟢 LOCAL · email regex detected |
+| 7 | `The employee's net salary is €2,500` | 🟢 LOCAL · sensitive keyword: "salary" |
+| 8 | `The patient's diagnosis indicates a wrist fracture` | 🟢 LOCAL · sensitive keywords: "diagnosis" / "patient" |
+| 9 | `Explain step by step how the TCP/IP protocol works` | 🔵 CLOUD · complexity keyword: "explain step by step" |
+| 10 | `Write a Python program that sorts a list and handles exceptions, with unit tests and full documentation for each method, including a usage example and instructions to deploy it on a production server with Docker and Kubernetes` | 🔵 CLOUD · long prompt (>400 characters) + keyword "write a program" |
 
 ### 🔀🤖 Rule-based + SLM fallback
 
-Le regole hard (PII, complessità, lunghezza) si applicano per prime; nei casi ambigui decide l'SLM locale con un JSON `{target, reason}`.
+Hard rules (PII, complexity, length) apply first; ambiguous cases are decided by the local SLM via a `{target, reason}` JSON.
 
-| # | Prompt | Risultato atteso |
+| # | Prompt | Expected result |
 |---|--------|-----------------|
-| 1 | `Buongiorno!` | 🟢 LOCAL · SLM: chitchat/saluto semplice |
-| 2 | `Cos'è il machine learning in due parole?` | 🟢 LOCAL · SLM: domanda breve e semplice |
-| 3 | `Traduci "buongiorno" in giapponese` | 🟢 LOCAL · SLM: task semplice di traduzione |
-| 4 | `Il contratto interno prevede un bonus del 10%` | 🟢 LOCAL · regola hard: keyword "contratto interno" |
-| 5 | `La carta di credito 4111 1111 1111 1111 è stata bloccata` | 🟢 LOCAL · regola hard: keyword "carta di credito" + regex numero carta |
-| 6 | `Analizza in dettaglio i pro e contro di microservizi vs monolite` | 🔵 CLOUD · regola hard: keyword "analizza in dettaglio" |
-| 7 | `Inventami una favola di 200 parole ambientata nello spazio` | 🔵 CLOUD · SLM: scrittura creativa long-form |
-| 8 | `Scrivi un'app web in React con autenticazione e CRUD completo` | 🔵 CLOUD · regola hard: keyword "scrivi un'app" |
-| 9 | `Confronta le architetture ARM e x86 dal punto di vista energetico, prestazionale e di costo` | 🔵 CLOUD · regola hard: keyword "architettura" |
-| 10 | `Quali sono i 3 linguaggi più usati nel 2025?` | 🟢 LOCAL · SLM: domanda fattuale breve |
+| 1 | `Good morning!` | 🟢 LOCAL · SLM: chitchat/simple greeting |
+| 2 | `What is machine learning in two words?` | 🟢 LOCAL · SLM: short and simple question |
+| 3 | `Translate "good morning" into Japanese` | 🟢 LOCAL · SLM: simple translation task |
+| 4 | `The internal contract provides for a 10% bonus` | 🟢 LOCAL · hard rule: keyword "internal contract" |
+| 5 | `Credit card 4111 1111 1111 1111 has been blocked` | 🟢 LOCAL · hard rule: keyword "credit card" + card-number regex |
+| 6 | `Analyse in detail the pros and cons of microservices vs monolith` | 🔵 CLOUD · hard rule: keyword "analyse in detail" |
+| 7 | `Invent a 200-word fairy tale set in space` | 🔵 CLOUD · SLM: long-form creative writing |
+| 8 | `Write a web app in React with authentication and full CRUD` | 🔵 CLOUD · hard rule: keyword "write an app" |
+| 9 | `Compare the ARM and x86 architectures from the energy, performance and cost perspectives` | 🔵 CLOUD · hard rule: keyword "architecture" |
+| 10 | `What are the 3 most used languages in 2025?` | 🟢 LOCAL · SLM: short factual question |
 
 ### 🟢 Always Local
 
-Tutte le richieste vengono inviate al modello locale (SLM), indipendentemente dal contenuto. Utile per massimizzare privacy e minimizzare latenza/costi.
+All requests are sent to the local model (SLM), regardless of content. Useful to maximise privacy and minimise latency/cost.
 
-| # | Prompt | Risultato atteso |
+| # | Prompt | Expected result |
 |---|--------|-----------------|
-| 1 | `Ciao, presentati` | 🟢 LOCAL · sempre locale |
-| 2 | `Scrivi un saggio di 1000 parole sull'intelligenza artificiale` | 🟢 LOCAL · sempre locale (anche se complesso) |
-| 3 | `Spiega passo passo la teoria della relatività` | 🟢 LOCAL · sempre locale (ignora keyword complessità) |
-| 4 | `Il mio IBAN è IT60X0542811101000000123456` | 🟢 LOCAL · sempre locale |
-| 5 | `Confronta in dettaglio Python e JavaScript` | 🟢 LOCAL · sempre locale |
+| 1 | `Hi, introduce yourself` | 🟢 LOCAL · always local |
+| 2 | `Write a 1000-word essay on artificial intelligence` | 🟢 LOCAL · always local (even if complex) |
+| 3 | `Explain step by step the theory of relativity` | 🟢 LOCAL · always local (ignores complexity keywords) |
+| 4 | `My IBAN is IT60X0542811101000000123456` | 🟢 LOCAL · always local |
+| 5 | `Compare Python and JavaScript in detail` | 🟢 LOCAL · always local |
 
 ### 🔵 Always Cloud
 
-Tutte le richieste vengono inviate al modello cloud (LLM), indipendentemente dal contenuto. Utile quando serve la massima capacità del modello.
+All requests are sent to the cloud model (LLM), regardless of content. Useful when maximum model capability is required.
 
-| # | Prompt | Risultato atteso |
+| # | Prompt | Expected result |
 |---|--------|-----------------|
-| 1 | `Ciao, come va?` | 🔵 CLOUD · sempre cloud |
-| 2 | `Che ore sono?` | 🔵 CLOUD · sempre cloud (anche se banale) |
-| 3 | `Il mio codice fiscale è RSSMRA85M01H501Z` | 🔵 CLOUD · sempre cloud (⚠️ PII inviato al cloud!) |
-| 4 | `Scrivi un compilatore completo in Rust` | 🔵 CLOUD · sempre cloud |
-| 5 | `Dimmi una curiosità` | 🔵 CLOUD · sempre cloud |
+| 1 | `Hi, how's it going?` | 🔵 CLOUD · always cloud |
+| 2 | `What time is it?` | 🔵 CLOUD · always cloud (even if trivial) |
+| 3 | `My fiscal code is RSSMRA85M01H501Z` | 🔵 CLOUD · always cloud (⚠️ PII sent to the cloud!) |
+| 4 | `Write a complete compiler in Rust` | 🔵 CLOUD · always cloud |
+| 5 | `Tell me a fun fact` | 🔵 CLOUD · always cloud |
 
-> **Nota:** Con la strategia *Always Cloud*, i dati sensibili (PII) **non vengono protetti** dal routing locale. Usare con cautela in contesti reali.
+> **Note:** With the *Always Cloud* strategy, sensitive data (PII) is **not protected** by local routing. Use with caution in real-world contexts.
 
-## Punti di estensione
+## Extension points
 
-- Cambia modello locale (`qwen2.5-3b`, `llama-3.2-3b`...) in `appsettings.json`.
-- Tuning pricing per `gpt-4o`, `gpt-4o-mini` nelle proprietà `InputPricePer1K` / `OutputPricePer1K`.
-- Aggiungi una terza route (es. modello specializzato code) come ulteriore `IChatClient` keyed e nuovo target del router.
+- Change the local model (`qwen2.5-3b`, `llama-3.2-3b`...) in `appsettings.json`.
+- Tune pricing for `gpt-4o`, `gpt-4o-mini` via the `InputPricePer1K` / `OutputPricePer1K` properties.
+- Add a third route (e.g. a code-specialised model) as an additional keyed `IChatClient` and a new router target.

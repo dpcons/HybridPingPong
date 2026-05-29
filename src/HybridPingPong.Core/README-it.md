@@ -1,18 +1,18 @@
 # HybridPingPong.Core
 
-This library contains the domain logic for the **HybridPingPong** project. It provides a hybrid AI routing engine that decides, for each chat turn, whether to dispatch a request to a **local** model (Foundry Local) or to the **cloud** (Azure AI Foundry). The routing can be purely rule-based (deterministic, explainable), augmented with an SLM classifier for ambiguous cases, or configured to always use the cloud model or always use the local model.
+Questa libreria contiene la logica di dominio del progetto **HybridPingPong**. Fornisce un motore di routing AI ibrido che decide, per ogni turno di chat, se inoltrare la richiesta a un modello **locale** (Foundry Local) oppure al **cloud** (Azure AI Foundry). Il routing può essere puramente rule-based (deterministico e spiegabile), arricchito con un classificatore SLM per i casi ambigui, oppure configurato per usare sempre il modello cloud o sempre il modello locale.
 
-The project is organised into three layers:
+Il progetto è organizzato in tre livelli:
 
-| Folder | Responsibility |
+| Cartella | Responsabilità |
 |---|---|
-| `Models/` | Data contracts, options, enums, and view models |
-| `Services/` | Router interface, router implementations, and the orchestrator |
-| `Utilities/` | JSON rule loading and pattern helpers |
+| `Models/` | Contratti dati, opzioni di configurazione, enum e view model |
+| `Services/` | Interfaccia del router, implementazioni dei router e orchestrator |
+| `Utilities/` | Caricamento delle regole JSON e helper per i pattern |
 
 ---
 
-## Class Diagrams
+## Diagrammi delle classi
 
 ### Services
 
@@ -63,10 +63,10 @@ classDiagram
     IModelRouter <|.. SlmFallbackRouter
     IModelRouter <|.. AlwaysCloudRouter
     IModelRouter <|.. AlwaysLocalRouter
-    SlmFallbackRouter --> IModelRouter : wraps (ruleRouter)
-    ChatOrchestrator --> IModelRouter : resolves and uses
-    ChatOrchestrator --> ChatBackends : resolves backends from
-    SlmFallbackRouter --> ChatBackends : uses LocalKey
+    SlmFallbackRouter --> IModelRouter : incapsula (ruleRouter)
+    ChatOrchestrator --> IModelRouter : risolve e utilizza
+    ChatOrchestrator --> ChatBackends : risolve i backend da
+    SlmFallbackRouter --> ChatBackends : utilizza LocalKey
 ```
 
 ---
@@ -185,5 +185,5 @@ classDiagram
     }
 
     RuleData "1" *-- "0..*" RegexPatternEntry : RegexPatterns
-    RulesLoader ..> RuleData : produces
+    RulesLoader ..> RuleData : produce
 ```
