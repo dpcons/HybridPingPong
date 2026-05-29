@@ -34,6 +34,7 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
 },
 "AzureFoundry": {
   "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
   "ApiKey": "...",
   "Deployment": "gpt-4o-mini"
 }
@@ -41,11 +42,76 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
  
 > Nel caso in cui in Foundry Local si stia utilizzando un modello specifico per una configurazione hardwere, la configurazione `model` in `FoundryLocal` deve essere il nome completo del modello
 
+### Modalità di autenticazione ad Azure AI Foundry
+
+La proprietà `AzureFoundry:AuthMode` definisce come l'applicazione si autentica all'endpoint cloud. Sono supportate due modalità:
+
+| AuthMode | Proprietà richieste | Quando usarla |
+|---|---|---|
+| `Key` | `Endpoint`, `ApiKey` | Sviluppo locale o scenari semplici basati su shared secret. |
+| `Identity` | `Endpoint`, `TenantId`, `ClientId`, `ClientSecret` | Produzione / scenari enterprise con service principal Entra ID. Il principal deve avere il ruolo *Cognitive Services OpenAI User* sulla risorsa. |
+
+Esempio con autenticazione **Key**:
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Key",
+  "ApiKey": "<api-key>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+Esempio con autenticazione **Entra ID** (service principal):
+
+```json
+"AzureFoundry": {
+  "Endpoint": "https://your-resource.openai.azure.com/",
+  "AuthMode": "Identity",
+  "TenantId": "<tenant-guid>",
+  "ClientId": "<application-guid>",
+  "ClientSecret": "<client-secret>",
+  "Deployment": "gpt-4o-mini"
+}
+```
+
+### Assegnazione del ruolo `Azure AI User` al service principal
+
+Quando `AuthMode` è impostato a `Identity`, il service principal Entra ID deve essere autorizzato a invocare l'inference sul modello deployato nel progetto Azure AI Foundry. Il ruolo built-in minimo necessario è:
+
+- **`Azure AI User`** — concede i permessi di data plane per chiamare chat completions, embeddings e le altre API di inference sui modelli deployati in un progetto Foundry, **senza** alcun permesso di gestione.
+
+> Se la risorsa di destinazione è un account Azure OpenAI *classico* (kind `OpenAI`) invece di un progetto Foundry (kind `AIServices`), utilizzare invece **`Cognitive Services OpenAI User`**.
+
+**Assegnazione tramite Azure CLI:**
+
+```powershell
+az role assignment create `
+  --assignee <application-guid> `
+  --role "Azure AI User" `
+  --scope /subscriptions/<subscription-id>/resourceGroups/<resource-group>/providers/Microsoft.CognitiveServices/accounts/<nome-foundry-account>
+```
+
+Lo scope può essere impostato a livello di account Foundry (copre tutti i progetti) oppure ristretto a uno specifico progetto / deployment per un controllo più granulare.
+
+**Assegnazione tramite Azure Portal:**
+
+1. Apri l'account Azure AI Foundry (o il singolo progetto) nel portale Azure.
+2. Vai su **Controllo di accesso (IAM) → Aggiungi → Aggiungi assegnazione di ruolo**.
+3. Seleziona il ruolo **Azure AI User**.
+4. Assegna l'accesso a **Utente, gruppo o entità servizio** e scegli l'applicazione Entra ID configurata in `AzureFoundry:ClientId`.
+5. Salva l'assegnazione — la propagazione del ruolo si completa in genere in pochi minuti.
+
 Con user-secrets:
 ```powershell
 dotnet user-secrets init
 dotnet user-secrets set "AzureFoundry:Endpoint" "https://..."
 dotnet user-secrets set "AzureFoundry:ApiKey" "..."
+# oppure, per Entra ID:
+dotnet user-secrets set "AzureFoundry:AuthMode" "Identity"
+dotnet user-secrets set "AzureFoundry:TenantId" "<tenant-guid>"
+dotnet user-secrets set "AzureFoundry:ClientId" "<application-guid>"
+dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 ```
 
 ## Run
