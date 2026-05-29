@@ -1,4 +1,5 @@
 using HybridPingPong.Web.Components;
+using HybridPingPong.Web.Localization;
 using HybridPingPong.Core.Models;
 using HybridPingPong.Core.Services;
 
@@ -6,6 +7,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<LanguageService>();
 
 // Hybrid chat backends (Foundry Local + Azure Foundry)
 builder.Services.AddHybridChatBackends(builder.Configuration);

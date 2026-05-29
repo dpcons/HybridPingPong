@@ -1,27 +1,29 @@
 ﻿@page "/Error"
 @using System.Diagnostics
+@using HybridPingPong.Web.Components.Shared
+@inject LanguageService Lang
 
-<PageTitle>Errore</PageTitle>
+<PageTitle>@Lang["error.pageTitle"]</PageTitle>
 
-<h1 class="text-danger">Errore.</h1>
-<h2 class="text-danger">Si è verificato un errore durante l'elaborazione della richiesta.</h2>
+<div style="padding:16px 22px;">
+    <LanguageSelector ReloadOnChange="true" />
+</div>
+
+<h1 class="text-danger">@Lang["error.h1"]</h1>
+<h2 class="text-danger">@Lang["error.h2"]</h2>
 
 @if (ShowRequestId)
 {
     <p>
-        <strong>ID richiesta:</strong> <code>@RequestId</code>
+        <strong>@Lang["error.requestId"]</strong> <code>@RequestId</code>
     </p>
 }
 
-<h3>Modalità sviluppo</h3>
+<h3>@Lang["error.devMode"]</h3>
+<p>@Lang["error.devModeP1"]</p>
 <p>
-    Passando all'ambiente <strong>Development</strong> verranno visualizzate informazioni più dettagliate sull'errore verificatosi.
-</p>
-<p>
-    <strong>L'ambiente Development non dovrebbe essere abilitato per le applicazioni in produzione.</strong>
-    Potrebbe mostrare informazioni sensibili delle eccezioni agli utenti finali.
-    Per il debug locale, abilitare l'ambiente <strong>Development</strong> impostando la variabile d'ambiente <strong>ASPNETCORE_ENVIRONMENT</strong> su <strong>Development</strong>
-    e riavviando l'applicazione.
+    <strong>@Lang["error.devModeP2.warn"]</strong>
+    @Lang["error.devModeP2.rest"]
 </p>
 
 @code{

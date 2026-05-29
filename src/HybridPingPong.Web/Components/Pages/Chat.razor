@@ -1,38 +1,42 @@
 @page "/chat"
 @rendermode InteractiveServer
 @using Microsoft.Extensions.AI
+@using HybridPingPong.Web.Components.Shared
 @inject ChatOrchestrator Orchestrator
+@inject LanguageService Lang
+@implements IDisposable
 
-<PageTitle>Hybrid Ping-Pong</PageTitle>
+<PageTitle>@Lang["chat.pageTitle"]</PageTitle>
 
 <div class="hpp-shell">
     <header class="hpp-header">
         <div class="hpp-title">
             <span class="hpp-logo">🏓</span>
             <div>
-                <h1>Hybrid Ping-Pong</h1>
-                <p class="hpp-sub">Foundry Local ↔ Azure AI Foundry — demo di instradamento intelligente</p>
+                <h1>@Lang["chat.pageTitle"]</h1>
+                <p class="hpp-sub">@Lang["chat.subtitle"]</p>
             </div>
         </div>
 
         <div class="hpp-controls">
+            <LanguageSelector />
             <label class="hpp-strategy">
-                Instradamento:
+                @Lang["chat.routing"]:
                 <select @bind="_strategy" disabled="@_streaming">
-                    <option value="@RouterStrategy.RuleBased">Basato su regole</option>
-                    <option value="@RouterStrategy.RuleBasedPlusSlm">Regole + SLM</option>
-                    <option value="@RouterStrategy.AlwaysCloud">Sempre Cloud</option>
-                    <option value="@RouterStrategy.AlwaysLocal">Sempre Locale</option>
+                    <option value="@RouterStrategy.RuleBased">@Lang["chat.strategy.ruleBased"]</option>
+                    <option value="@RouterStrategy.RuleBasedPlusSlm">@Lang["chat.strategy.ruleBasedPlusSlm"]</option>
+                    <option value="@RouterStrategy.AlwaysCloud">@Lang["chat.strategy.alwaysCloud"]</option>
+                    <option value="@RouterStrategy.AlwaysLocal">@Lang["chat.strategy.alwaysLocal"]</option>
                 </select>
             </label>
-            <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">Nuova Chat</button>
+            <button class="hpp-clear" @onclick="Reset" disabled="@_streaming">@Lang["chat.newChat"]</button>
         </div>
 
         <div class="hpp-stats">
-            <div class="stat"><span class="lbl">Turni</span><span class="val">@_totalTurns</span></div>
-            <div class="stat local"><span class="lbl">🟢 Locale</span><span class="val">@_localTurns (@LocalPct%)</span></div>
-            <div class="stat cloud"><span class="lbl">🔵 Cloud</span><span class="val">@_cloudTurns</span></div>
-            <div class="stat cost"><span class="lbl">💰 Costo cloud</span><span class="val">€@_totalCost.ToString("F4")</span></div>
+            <div class="stat"><span class="lbl">@Lang["chat.stats.turns"]</span><span class="val">@_totalTurns</span></div>
+            <div class="stat local"><span class="lbl">@Lang["chat.stats.local"]</span><span class="val">@_localTurns (@LocalPct%)</span></div>
+            <div class="stat cloud"><span class="lbl">@Lang["chat.stats.cloud"]</span><span class="val">@_cloudTurns</span></div>
+            <div class="stat cost"><span class="lbl">@Lang["chat.stats.cloudCost"]</span><span class="val">€@_totalCost.ToString("F4")</span></div>
         </div>
     </header>
 
@@ -40,11 +44,11 @@
         @if (_messages.Count == 0)
         {
             <div class="hpp-empty">
-                <h2>Prova questi esempi 👇</h2>
+                <h2>@Lang["chat.empty.title"]</h2>
                 <ul>
-                    <li><code>Ciao, come stai?</code> — chat breve → 🟢 locale</li>
-                    <li><code>Il mio IBAN è IT60X0542811101000000123456</code> → 🟢 locale (dati sensibili)</li>
-                    <li><code>Scrivimi un'analisi comparativa dettagliata tra REST e GraphQL con esempi di codice</code> → 🔵 cloud</li>
+                    <li><code>@Lang["chat.empty.example1"]</code> — @Lang["chat.empty.example1.desc"]</li>
+                    <li><code>@Lang["chat.empty.example2"]</code> → @Lang["chat.empty.example2.desc"]</li>
+                    <li><code>@Lang["chat.empty.example3"]</code> → @Lang["chat.empty.example3.desc"]</li>
                 </ul>
             </div>
         }
@@ -55,15 +59,15 @@
                 {
                     <div class="hpp-badge @(m.Metrics.Target == RouteTarget.Local ? "local" : "cloud")"
                          title="@m.Metrics.Reason (da @m.Metrics.DecidedBy)">
-                            @(m.Metrics.Target == RouteTarget.Local ? "🟢 LOCALE" : "🔵 CLOUD")
+                            @(m.Metrics.Target == RouteTarget.Local ? Lang["chat.badge.local"] : Lang["chat.badge.cloud"])
                         · @m.Metrics.ModelName
                         · @m.Metrics.LatencyMs ms
-                        · ttft @m.Metrics.FirstTokenMs ms
+                        · @Lang["chat.badge.ttft"] @m.Metrics.FirstTokenMs ms
                         @if (m.Metrics.Target == RouteTarget.Cloud)
                         {
                             <span> · $@m.Metrics.EstimatedCostUsd.ToString("F4")</span>
                         }
-                        <span class="why">perché? @m.Metrics.Reason</span>
+                        <span class="why">@Lang["chat.badge.why"] @m.Metrics.Reason</span>
                     </div>
                 }
                 <div class="bubble">@m.Content</div>
@@ -75,9 +79,9 @@
                 @if (_currentMetrics is not null)
                 {
                     <div class="hpp-badge @(_currentMetrics.Target == RouteTarget.Local ? "local" : "cloud")">
-                        @(_currentMetrics.Target == RouteTarget.Local ? "🟢 LOCALE" : "🔵 CLOUD")
-                        · instradato da @_currentMetrics.DecidedBy
-                        <span class="why">perché? @_currentMetrics.Reason</span>
+                        @(_currentMetrics.Target == RouteTarget.Local ? Lang["chat.badge.local"] : Lang["chat.badge.cloud"])
+                        · @Lang["chat.badge.routedBy"] @_currentMetrics.DecidedBy
+                        <span class="why">@Lang["chat.badge.why"] @_currentMetrics.Reason</span>
                     </div>
                 }
                 <div class="bubble">@_streamingBuffer<span class="caret">▍</span></div>
@@ -92,10 +96,10 @@
     <footer class="hpp-composer">
         <textarea @bind="_input" @bind:event="oninput"
                   @onkeydown="OnKeyDown"
-                  placeholder="Scrivi il tuo messaggio... (Invio per inviare, Maiusc+Invio per andare a capo)"
+                  placeholder="@Lang["chat.placeholder"]"
                   disabled="@_streaming"></textarea>
         <button @onclick="Send" disabled="@(_streaming || string.IsNullOrWhiteSpace(_input))">
-            @(_streaming ? "..." : "Invia")
+            @(_streaming ? Lang["chat.sending"] : Lang["chat.send"])
         </button>
     </footer>
 </div>
@@ -108,6 +112,8 @@
     .hpp-title h1 { margin:0; font-size:20px; }
     .hpp-sub { margin:2px 0 0; font-size:12px; color:#8a93a6; }
     .hpp-controls { display:flex; gap:10px; align-items:center; }
+    .hpp-language { display:inline-flex; align-items:center; gap:6px; font-size:12px; color:#8a93a6; }
+    .hpp-language select { background:#0f1115; color:#e7e9ee; border:1px solid #2c3240; border-radius:6px; padding:6px 8px; }
     .hpp-strategy select { background:#0f1115; color:#e7e9ee; border:1px solid #2c3240; border-radius:6px; padding:6px 8px; }
     .hpp-clear { background:#2c3240; color:#e7e9ee; border:0; padding:6px 12px; border-radius:6px; cursor:pointer; }
     .hpp-stats { display:flex; gap:14px; flex-wrap:wrap; }
@@ -162,6 +168,18 @@
     private int _cloudTurns;
     private decimal _totalCost;
     private int LocalPct => _totalTurns == 0 ? 0 : (int)Math.Round(_localTurns * 100.0 / _totalTurns);
+
+    protected override void OnInitialized()
+    {
+        Lang.LanguageChanged += OnLangChanged;
+    }
+
+    private void OnLangChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose()
+    {
+        Lang.LanguageChanged -= OnLangChanged;
+    }
 
     private async Task OnKeyDown(KeyboardEventArgs e)
     {

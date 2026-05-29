@@ -1,9 +1,22 @@
 ﻿@inherits LayoutComponentBase
+@inject LanguageService Lang
+@implements IDisposable
 
 @Body
 
 <div id="blazor-error-ui" data-nosnippet>
-    Si è verificato un errore imprevisto.
-    <a href="." class="reload">Ricarica</a>
+    @Lang["layout.errorOccurred"]
+    <a href="." class="reload">@Lang["layout.reload"]</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    protected override void OnInitialized()
+    {
+        Lang.LanguageChanged += OnLangChanged;
+    }
+
+    private void OnLangChanged() => InvokeAsync(StateHasChanged);
+
+    public void Dispose() => Lang.LanguageChanged -= OnLangChanged;
+}
