@@ -18,9 +18,10 @@ Pensata per la sessione *"The Foundry Forge: Crafting AI Solutions from Azure to
 1. **.NET 10 SDK** (la repo usa `net10.0`).
 2. **Foundry Local** in esecuzione con un modello caricato, es.:
    ```powershell
-   foundry model run phi-4-mini
+   foundry server start
+   foundry model load phi-4-mini
    ```
-   Verifica l'endpoint OpenAI-compatible su `http://localhost:5273/v1`.
+   Recupera l'endpoint OpenAI-compatible con il comando `foundry server status`.
 3. (Opzionale ma consigliato per la demo completa) Una **Azure AI Foundry / Azure OpenAI** deployment, es. `gpt-4o-mini`.
 
 ## Configurazione
@@ -41,6 +42,12 @@ Modifica `appsettings.json` (o usa user-secrets / variabili d'ambiente):
 ```
  
 > Nel caso in cui in Foundry Local si stia utilizzando un modello specifico per una configurazione hardwere, la configurazione `model` in `FoundryLocal` deve essere il nome completo del modello
+
+> Per recuperare l'endpoint local esposto da Foundry Local (per la configurazione), utilizzare il seguente comando:
+
+```powershell
+   foundry server status
+```
 
 ### Modalità di autenticazione ad Azure AI Foundry
 

@@ -105,6 +105,14 @@ AddRazorComponents()
 }
 ```
 
+> **Note on `FoundryLocal` `Endpoint`** To retrieve the local endpoint used by Foundry Local, you can run the following command:
+
+```powershell
+   foundry server status
+```
+
+> **Note on `FoundryLocal` `Model`** if Foundry Local is running a hardware-specific variant, use the full model ID as reported by the Foundry Local endpoint (e.g. `Phi-4-mini-instruct-cuda-gpu:5`).
+
 ### Authentication modes for Azure AI Foundry
 
 The `AzureFoundry:AuthMode` property selects how the application authenticates against the cloud endpoint. Two modes are supported:
@@ -175,8 +183,6 @@ The scope can be set at the Foundry account level (covers every project) or narr
 > dotnet user-secrets set "AzureFoundry:ClientSecret" "<client-secret>"
 > ```
 
-> **Note on `Model`:** if Foundry Local is running a hardware-specific variant, set `Model` to the full model ID as reported by the Foundry Local endpoint (e.g. `Phi-4-mini-instruct-cuda-gpu:5`).
-
 ---
 
 ## Running Locally
@@ -192,6 +198,10 @@ Then open `https://localhost:<port>/chat`. The root URL (`/`) redirects automati
 1. **.NET 10 SDK**
 2. **Foundry Local** running with a model loaded:
    ```powershell
-   foundry model run phi-4-mini
+   foundry server start
+   foundry model load phi-4-mini
    ```
+
+   > **Note on `model`** if Foundry Local is running a hardware-specific variant, use the full model ID as reported by the Foundry Local endpoint (e.g. `Phi-4-mini-instruct-cuda-gpu:5`).
+
 3. *(Optional)* An **Azure AI Foundry / Azure OpenAI** deployment (e.g. `gpt-4o-mini`) for cloud routing.
