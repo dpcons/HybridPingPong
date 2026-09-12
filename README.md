@@ -101,7 +101,7 @@ Open `https://localhost:7xxx/chat`.
 | --- | --- | --- |
 | 1 | `Hi, how are you?` | 🟢 LOCAL · default short query |
 | 2 | `My IBAN is IT60X0542811101000000123456, can you explain how it works?` | 🟢 LOCAL · **PII detected** |
-| 3 | `Write me a detailed comparative analysis between REST and GraphQL with code examples in 500 words` | 🔵 CLOUD · long prompt / complex task |
+| 3 | `Write me a detailed comparative analysis between REST and GraphQL with code examples in 500 words. Use a friendly tone.  ` | 🔵 CLOUD · long prompt / complex task |
 | 4 | Switch to `Rule-based + SLM` and try: `Invent a 200-word fairy tale for me` | 🔵 CLOUD (decided by the SLM) |
 | 5 | Show the counter: *"we served N% of the queries locally, saving $X of cloud"* |
 

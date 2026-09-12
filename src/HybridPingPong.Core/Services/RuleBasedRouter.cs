@@ -38,7 +38,7 @@ public class RuleBasedRouter : IModelRouter
             if (lower.Contains(k))
                 return new(RouteTarget.Local, $"Sensitive keyword: '{k}'", "rule");
 
-        if (userMessage.Length > 400)
+        if (userMessage.Length > 100)
             return new(RouteTarget.Cloud, $"Long prompt ({userMessage.Length} chars)", "rule");
 
         foreach (var k in _rules.ComplexityKeywords)
