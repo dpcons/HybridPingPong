@@ -122,7 +122,7 @@ Deterministic strategy based on keywords, regex and thresholds. Predictable and 
 | 7 | `The employee's net salary is €2,500` | 🟢 LOCAL · sensitive keyword: "salary" |
 | 8 | `The patient's diagnosis indicates a wrist fracture` | 🟢 LOCAL · sensitive keywords: "diagnosis" / "patient" |
 | 9 | `Explain step by step how the TCP/IP protocol works` | 🔵 CLOUD · complexity keyword: "explain step by step" |
-| 10 | `Write a Python program that sorts a list and handles exceptions, with unit tests and full documentation for each method, including a usage example and instructions to deploy it on a production server with Docker and Kubernetes` | 🔵 CLOUD · long prompt (>400 characters) + keyword "write a program" |
+| 10 | `Write a program in Python that sorts a list and handles exceptions, with unit tests and full documentation for each method, including a usage example and instructions to deploy it on a production server with Docker and Kubernetes` | 🔵 CLOUD · complexity keyword: "write a program" |
 
 ### 🔀🤖 Rule-based + SLM fallback
 
@@ -135,10 +135,10 @@ Hard rules (PII, complexity, length) apply first; ambiguous cases are decided by
 | 3 | `Translate "good morning" into Japanese` | 🟢 LOCAL · SLM: simple translation task |
 | 4 | `The internal contract provides for a 10% bonus` | 🟢 LOCAL · hard rule: keyword "internal contract" |
 | 5 | `Credit card 4111 1111 1111 1111 has been blocked` | 🟢 LOCAL · hard rule: keyword "credit card" + card-number regex |
-| 6 | `Analyse in detail the pros and cons of microservices vs monolith` | 🔵 CLOUD · hard rule: keyword "analyse in detail" |
+| 6 | `Provide a deep analysis of the pros and cons of microservices vs monolith` | 🔵 CLOUD · hard rule: keyword "deep analysis" |
 | 7 | `Invent a 200-word fairy tale set in space` | 🔵 CLOUD · SLM: long-form creative writing |
-| 8 | `Write a web app in React with authentication and full CRUD` | 🔵 CLOUD · hard rule: keyword "write an app" |
-| 9 | `Compare the ARM and x86 architectures from the energy, performance and cost perspectives` | 🔵 CLOUD · hard rule: keyword "architecture" |
+| 8 | `Write a program for a React web app with authentication and full CRUD` | 🔵 CLOUD · hard rule: keyword "write a program" |
+| 9 | `Compare the ARM and x86 design patterns from the energy, performance and cost perspectives` | 🔵 CLOUD · hard rule: keyword "design pattern" |
 | 10 | `What are the 3 most used languages in 2025?` | 🟢 LOCAL · SLM: short factual question |
 
 ### 🟢 Always Local
